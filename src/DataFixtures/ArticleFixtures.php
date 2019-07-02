@@ -12,7 +12,7 @@ class ArticleFixtures extends Fixture
 {
     public function load(ObjectManager $manager)
     {
-                $faker = Faker\Factory::create('FR_fr');
+                $faker = \Faker\Factory::create('fr_FR');
 
                 // Créer 3 catégories fakées
                 for($i = 1; $i <=3; $i++){
@@ -27,12 +27,32 @@ class ArticleFixtures extends Fixture
                 for($j = 1; $j <= mt_rand(4, 6); $j++)
                 {
                     $article = new Article();
+          
+                    $content = '<p>' .join($faker->paragraphs(5), '</p><p>') . '</p>';
+                    
                     $article->setTitle($faker->sentence())
-                            ->setContent($faker->paragraphs())
-                            ->setImage("http://placehold.it/350x150")
-                            ->setCreatedAt(new \DateTime());
+                            ->setContent($content)
+                            ->setImage($faker->imageUrl())
+                            ->setCreatedAt($faker->dateTimeBetween('-6 months'))
+                            ->setCategory($category);
 
                     $manager->persist($article);
+
+                    // on donne des commentaires à l'article
+                    for($k = 1; $k <= mt_rand(4, 10); $k++) {
+                        $comment = new Comment();
+
+                        $content = '<p>' . join($faker->paragraphs(2), '</p><p>') . '</p>';
+
+                        $days = (new \DateTime())->diff($article->getCreatedAt())->days;
+
+                        $comment->setAuthor($faker->name)
+                                ->setContent($content)
+                                ->setCreatedAt($faker->dateTimeBetween('-' . $days . 'days'))// -100 days
+                                ->setArticle($article);
+
+                        $manager->persist($comment);
+                    }
                 }
         $manager->flush();
     }
